@@ -1,0 +1,39 @@
+﻿@page "/ReportView/{Id:guid}"
+
+@inherits ReportViewBase
+
+
+<h6>@cmp.ComponentName</h6>
+<hr />
+
+<div>
+    <iframe style="width:100%; height:550px;" src="@cmp.Content" frameborder="0" allowFullScreen="true"></iframe>
+</div>
+@code {
+
+
+    
+
+    //async void LocationChanged(object sender, LocationChangedEventArgs e)
+    //{
+    //    var httpreq = await client.PostAsJsonAsync("api/Component/ComponentData", Id);
+    //    cmp = await httpreq.Content.ReadFromJsonAsync<Components>();
+
+    //    if (httpreq.IsSuccessStatusCode)
+    //    {
+    //        cmp = await httpreq.Content.ReadFromJsonAsync<Components>();
+
+    //    }
+    //    // navigationManager.LocationChanged -= LocationChanged;
+    //    //string navigationMethod = e.IsNavigationIntercepted ? "HTML" : "code";
+    //    //System.Diagnostics.Debug.WriteLine($"Notified of navigation via {navigationMethod} to {e.Location}");
+    //}
+
+
+    //void IDisposable.Dispose()
+    //{
+    //    // Unsubscribe from the event when our component is disposed
+    //    navigationManager.LocationChanged -= LocationChanged;
+    //}
+
+}

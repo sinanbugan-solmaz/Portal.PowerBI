@@ -1,0 +1,56 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar" style="overflow-y:scroll;">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+           @* <a class="ml-md-auto">@logingStr</a>*@
+            <div class="dropdown">
+                <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    @logingStr
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="logout" style="margin-left: 0px; text-align: center;">Çıkış</a>                   
+                </div>
+            </div>
+
+        </div>
+
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
+</div>
+@code
+{
+    [CascadingParameter]
+    public Task<AuthenticationState> AuthState { get; set; }
+
+    [Inject]
+    ILocalStorageService LocalStorageService { get; set; }
+
+    [Inject]
+    NavigationManager NavigationManager { get; set; }
+
+    private String logingStr = "About";
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authState = await AuthState;
+
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            //authState.User.Claims.FirstOrDefault(i => i.ValueType == ClaimTypes.EMail);
+
+            logingStr = await LocalStorageService.GetItemAsStringAsync("username");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+}

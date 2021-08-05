@@ -1,0 +1,90 @@
+﻿@page "/Componentlist"
+
+
+
+<div class="btn-group">
+    <AddNewButtonComponent Caption="Create User" OnClick="goCreateComponentPage" />
+
+</div>
+<br />
+<br />
+
+
+@if (componentlist != null)
+{
+    <table class="table table-hover table-sm">
+        <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Component Name</th>
+                <th scope="col">URL</th>
+                <th scope="col">MenuName</th>
+                <th scope="col">#</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cmp in componentlist.Where(x=>x.MenuState==1))
+            {
+               // String spanClass = "badge badge-pill badge-" + (user.IsActive ? "success" : "danger");
+
+                <tr>
+                    <td>@cmp.ComponentId</td>
+                    <td>@cmp.ComponentName</td>
+                    <td>@cmp.Url</td>
+                    <td>@cmp.MenuView</td>
+                    @*<td>@user.IsActive</td>*@
+                  @*  <td> <span class="@spanClass"> @(user.IsActive ? "Active" : "Passive")</span></td>*@
+                    <td>
+                        <CustomEditButtonComponent IsSmall="false" Caption="Edit" IsOutline="true" OnClick="@(()=>goUpdateComponentPage(cmp.ComponentId))" />
+                        @* <CustomEditButtonComponent IsSmall="true" Caption="" IsOutline="true" OnClick="@(()=>DeleteUser(user.Id))" />*@
+
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+}
+
+@code
+{
+
+
+    [Inject]
+    public HttpClient Client { get; set; }
+
+
+
+    [Inject]
+    NavigationManager NavigationManager { get; set; }
+
+    protected List<ComponentData> componentlist = new List<ComponentData>();
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        await LoadList();
+    }
+
+
+    protected void goCreateComponentPage()
+    {
+        NavigationManager.NavigateTo("/ComponentPanel");
+    }
+
+    protected void goUpdateComponentPage(Guid CmpId)
+    {
+        NavigationManager.NavigateTo("/Component/Edit/" + CmpId);
+    }
+
+
+
+    protected async Task LoadList()
+    {
+
+       componentlist = await Client.GetFromJsonAsync<List<ComponentData>>("api/Component/Components");
+
+
+    }
+}

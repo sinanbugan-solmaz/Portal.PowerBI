@@ -1,0 +1,167 @@
+﻿@page "/Component/Edit/{ComponentId:guid}"
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="container">
+
+    <EditForm Model="@componentCreated" OnValidSubmit="editOrUpdate">
+        <DataAnnotationsValidator />
+
+
+        <div class="form-card">
+            <div>
+                <span style="display: block; font-size: 12px; text-align: center; color: #4a0505;">@IsSuccess </span>
+            </div>
+            <h6>Component Create -  @componentCreated.ComponentName</h6>
+            <hr />
+            <div class="row">
+                <div class="col-6">
+                    <label>Report Name</label>
+                    <input @bind-value="componentCreated.ComponentName" class="form-input-style" type="text" />
+                </div>
+                <div class="col-6">
+                    <label>Report Url</label>
+                    <input @bind-value="componentCreated.Url" class="form-input-style" type="text" />
+                </div>
+                <div class="col-6">
+                    <label>Report Content</label>
+                    <input @bind-value="componentCreated.Content" class="form-input-style" type="text" />
+                </div>
+                <div class="col-6">
+                    <label>Report Menu View</label>
+                    <input @bind-value="componentCreated.MenuView" class="form-input-style" type="text" />
+                </div>
+
+                <div class="col-6">
+                    <label>Top-Components</label>
+
+
+                    <select class="form-input-style" value="@componentCreated.TopMenu">
+
+                        <option value="Faturalar">Faturalar</option>
+                        <option value="Raporlar">Raporlar</option>
+                        <option value="WorkSpace">WorkSpace</option>
+
+
+                    </select>
+                </div>
+                @*<div class="col-6">
+                        <label>Component-Role</label>
+                        <div class="multiselect">
+                            <div id="checkboxes">
+                                @foreach (var item in componentCreated.RoleMapping)
+                                {
+                                <div>
+                                    <label for="@item">
+
+                                        @if (item.Contains(componentCreated.SelectedRole.ToString()))
+                                        {
+                                            <input type="checkbox" id="@item"  checked="checked" @onchange="@((e) => CheckboxChanged(e, item))" />
+                                        }
+                                        else
+                                        {
+                                            <input type="checkbox" id="@item" @onchange="@((e) => CheckboxChanged(e, item))" />
+                                        }
+                                        @item
+                                    </label>
+                                </div>
+                                }
+                            </div>
+                        </div>
+
+                    </div>*@
+
+            </div>
+            <div class="button-loc">
+                <button type="submit" class="btn btn-info">Güncelle</button>
+            </div>
+
+        </div>
+    </EditForm>
+</div>
+
+@code {
+
+    [Parameter]
+    public Guid ComponentId { get; set; }
+
+    [Inject]
+    HttpClient client { get; set; }
+
+    [Inject]
+    NavigationManager navigationManager { get; set; }
+
+    // ComponentCreatedRequestDTO userCreated { get; set; } = new ComponentCreatedRequestDTO();
+
+    ComponentData componentCreated = new ComponentData();
+
+    List<Roles> roles = new List<Roles>();
+
+    public string IsSuccess = "";
+
+    public List<string> CheckBox { get; set; } = new List<string>();
+    private void CheckboxChanged(ChangeEventArgs e, string key)
+    {
+        var i = componentCreated.RoleMapping.FirstOrDefault(i => i == key);
+        if (i != null)
+        {
+            CheckBox.Add(i);
+        }
+    }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        //var httpreq = await client.GetAsync("api/User/Roles");
+        //if (httpreq.IsSuccessStatusCode)
+        //{
+        //    roles = await httpreq.Content.ReadFromJsonAsync<List<Roles>>();
+        //}
+
+
+        var httpuser = await client.PostAsJsonAsync("api/Component/ComponentAndRole/", ComponentId);
+
+        if (httpuser.IsSuccessStatusCode)
+        {
+            componentCreated = await httpuser.Content.ReadFromJsonAsync<ComponentData>();
+
+        }
+
+        // userCreated = await client.GetFromJsonAsync<UserCreatedRequestDTO>("api/User/UserById/" + UserId);
+
+        base.OnInitialized();
+
+    }
+    async Task editOrUpdate()
+    {
+        try
+        {
+            componentCreated.SelectedRole.Add(CheckBox.ToString());
+            String url = "api/Component/Update";
+
+
+            var httpreq = await client.PostAsJsonAsync(url, componentCreated);
+
+            if (httpreq.IsSuccessStatusCode)
+            {
+                var resp = await httpreq.Content.ReadFromJsonAsync<ServiceResponse<ComponentData>>();
+
+                if (resp.Success)
+                {
+                    navigationManager.NavigateTo("/Componentlist");
+                }
+            }
+
+        }
+
+        catch (Exception ex)
+        {
+            IsSuccess = ex.Message;
+        }
+
+
+    }
+
+
+
+}

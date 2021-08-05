@@ -1,0 +1,111 @@
+﻿@page "/Userlist"
+
+
+
+<div class="btn-group">
+    <AddNewButtonComponent Caption="Create User" OnClick="goCreateUserPage" />
+
+</div>
+<br />
+<br />
+
+
+@if (userlist != null)
+{
+    <table class="table table-hover table-sm">
+        <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">E-Mail</th>
+                <th scope="col">Created Date</th>
+                <th scope="col">Status</th>
+                <th scope="col">#</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in userlist)
+            {
+                String spanClass = "badge badge-pill badge-" + (user.IsActive ? "success" : "danger");
+
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.UserName</td>
+                    <td>@user.Email</td>
+                    <td>@user.CreateDate</td>
+                    @*<td>@user.IsActive</td>*@
+                    <td> <span class="@spanClass"> @(user.IsActive ? "Active" : "Passive")</span></td>
+                    <td>
+                        <CustomEditButtonComponent IsSmall="false" Caption="Edit" IsOutline="true" OnClick="@(()=>goUpdateUserPage(user.Id))" />
+                       @* <CustomEditButtonComponent IsSmall="true" Caption="" IsOutline="true" OnClick="@(()=>DeleteUser(user.Id))" />*@
+
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+    </table>
+}
+
+@code
+{
+
+
+    [Inject]
+    public HttpClient Client { get; set; }
+
+
+
+    [Inject]
+    NavigationManager NavigationManager { get; set; }
+
+    protected List<Users> userlist = new List<Users>();
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        await LoadList();
+    }
+
+
+    protected void goCreateUserPage()
+    {
+        NavigationManager.NavigateTo("/UserPanel");
+    }
+
+    protected void goUpdateUserPage(Guid UserId)
+    {
+        NavigationManager.NavigateTo("/User/Edit/" + UserId);
+    }
+
+    //protected async Task DeleteUser(Guid Id)
+    //{
+    //    bool confirmed = await ModalManager.ConfirmationAsync("Confirmation", "User will be deleted. Are you sure?");
+
+    //    if (!confirmed) return;
+
+    //    try
+    //    {
+    //        bool deleted = await Client.PostGetServiceResponseAsync<bool, Guid>("api/User/Delete", Id, true);
+
+    //        await LoadList();
+    //    }
+    //    catch (ApiException ex)
+    //    {
+    //        await ModalManager.ShowMessageAsync("User Deletion Error", ex.Message);
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        await ModalManager.ShowMessageAsync("An Error", ex.Message);
+    //    }
+    //}
+
+    protected async Task LoadList()
+    {
+        
+            userlist = await Client.GetFromJsonAsync<List<Users>>("api/User/Users");
+        
+      
+    }
+}

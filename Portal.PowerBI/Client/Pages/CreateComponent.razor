@@ -1,0 +1,126 @@
+﻿@page "/ComponentPanel"
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="container">
+
+    <EditForm Model="@componentCreated" OnValidSubmit="ComponentProcess">
+        <DataAnnotationsValidator />
+        <div class="form-card">
+            <h6>New Report</h6>
+            <hr />
+            <div class="row">
+                <div class="col-6">
+                    <label>Report Name</label>
+                    <input @bind-value="componentCreated.ComponentName" class="form-input-style" type="text" />
+                </div>
+                <div class="col-6">
+                    <label>Report Url</label>
+                    <input @bind-value="componentCreated.url" class="form-input-style" type="text" />
+                </div>
+                <div class="col-6">
+                    <label>Report Content</label>
+                    <input @bind-value="componentCreated.Content" class="form-input-style" type="text" />
+                </div>
+                <div class="col-6">
+                    <label>Report Menu View</label>
+                    <input @bind-value="componentCreated.MenuName" class="form-input-style" type="text" />
+                </div>
+
+                <div class="col-6">
+                    <label>Component-Role</label>
+
+
+                    <select class="form-input-style" value="@componentCreated.Roles">
+                        <option value="first">Rol Seçimi</option>
+                        @foreach (var cnt in roles)
+                        {
+                            <option value="@cnt.RoleName">@cnt.RoleName</option>
+                        }
+                        @*<option value="4e02b3e4-7785-46cd-84c6-26924f017ef2">Admin</option>
+                <option value="">Report1</option>*@
+                    </select>
+                </div>
+
+                <div class="col-6">
+                    <label>Top-Components</label>
+
+
+                    <select class="form-input-style" value="@componentCreated.TopMenu">
+
+                            <option value="781e1155-49bf-4af9-b1f1-55bb194cd14f">Faturalar</option>
+                            <option value="0869b1bb-4fc2-4db9-a610-33d11fe8c9cd">Raporlar</option>
+                            <option value="4e499654-ea54-4cdc-94ce-b9c441b37583">Çalışma Alanı</option>
+          
+                    </select>
+                </div>
+
+            </div>
+            <div class="button-loc">
+                <button type="submit" class="btn btn-info">Ekle</button>
+            </div>
+
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Inject]
+    HttpClient client { get; set; }
+
+    [Inject]
+    NavigationManager navigationManager { get; set; }
+
+    UserCreatedRequestDTO userCreated = new UserCreatedRequestDTO();
+
+    ComponentCreatedRequestDTO componentCreated = new ComponentCreatedRequestDTO();
+
+    List<Roles> roles = new List<Roles>();
+
+    public string IsSuccess = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        var httpreq = await client.GetAsync("api/User/Roles");
+        if (httpreq.IsSuccessStatusCode)
+        {
+            roles = await httpreq.Content.ReadFromJsonAsync<List<Roles>>();
+        }
+
+
+    }
+
+    public async Task ComponentProcess()
+    {
+        var httpreqresp = await client.PostAsJsonAsync("api/Component/ComponentCreate", componentCreated);
+        if (httpreqresp.IsSuccessStatusCode)
+        {
+            try
+            {
+                var resp = await httpreqresp.Content.ReadFromJsonAsync<ServiceResponse<UserAndRoleMappingResponse>>();
+
+                if (resp.Success)
+                {
+                    IsSuccess = resp.Message;
+                    navigationManager.NavigateTo("/ComponentPanel");
+                }
+                else
+                {
+                    IsSuccess = resp.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                IsSuccess = ex.Message;
+            }
+
+
+        }
+
+
+
+    }
+
+
+}

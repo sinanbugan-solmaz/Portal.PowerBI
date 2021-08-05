@@ -1,0 +1,117 @@
+﻿@page "/User/Edit/{UserId:guid}"
+
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="container">
+
+    <EditForm Model="@userCreated" OnValidSubmit="editOrUpdate">
+        <DataAnnotationsValidator />
+
+
+        <div class="form-card">
+            <div>
+                <span style="display: block; font-size: 12px; text-align: center; color: #4a0505;">@IsSuccess </span>
+            </div>
+            <h6>User Create -  @userCreated.UserName</h6>
+            <hr />
+            <div class="row">
+                <div class="col-6">
+                    <label>UserName</label>
+                    <input value="@userCreated.UserName" class="form-input-style" type="text" />
+
+                </div>
+                <div class="col-6">
+                    <label>Email</label>
+                    <input @bind-value="userCreated.Email" class="form-input-style" type="text" />
+
+                </div>
+                <div class="col-6">
+                    <label>Password</label>
+                    <input @bind-value="userCreated.Password" class="form-input-style" type="text" />
+
+                </div>
+                <!--<div class="col-6">
+                    <label>User-Role</label>
+                    <select class="form-input-style" value="@userCreated.RoleId">
+                     
+                        @foreach (var cnt in userCreated.Roles)
+                        {
+                            <option value="@cnt.RoleName">@cnt.RoleName</option>
+                        }-->
+                        @*<option value="4e02b3e4-7785-46cd-84c6-26924f017ef2">Admin</option>
+            <option value="">Report1</option>*@
+                    <!--</select>
+                </div>-->
+            </div>
+            <div class="button-loc">
+                <button type="submit" class="btn btn-info">Güncelle</button>
+            </div>
+
+        </div>
+    </EditForm>
+</div>
+
+@code {
+
+    [Parameter]
+    public Guid UserId { get; set; }
+
+    [Inject]
+    HttpClient client { get; set; }
+
+    [Inject]
+    NavigationManager navigationManager { get; set; }
+
+    UserCreatedRequestDTO userCreated { get; set; } = new UserCreatedRequestDTO();
+
+    ComponentCreatedRequestDTO componentCreated = new ComponentCreatedRequestDTO();
+
+    List<Roles> roles = new List<Roles>();
+
+    public string IsSuccess = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        //var httpreq = await client.GetAsync("api/User/Roles");
+        //if (httpreq.IsSuccessStatusCode)
+        //{
+        //    roles = await httpreq.Content.ReadFromJsonAsync<List<Roles>>();
+        //}
+
+
+        var httpuser = await client.PostAsJsonAsync("api/User/UserById/", UserId);
+
+        if (httpuser.IsSuccessStatusCode)
+        {
+            userCreated = await httpuser.Content.ReadFromJsonAsync<UserCreatedRequestDTO>();
+
+        }
+
+        // userCreated = await client.GetFromJsonAsync<UserCreatedRequestDTO>("api/User/UserById/" + UserId);
+
+        base.OnInitialized();
+
+    }
+    async Task editOrUpdate()
+    {
+        try
+        {
+            String url = "api/User/Update";
+
+
+            var httpreq = await client.PostAsJsonAsync(url, userCreated);
+
+            navigationManager.NavigateTo("/Userlist");
+        }
+
+        catch (Exception ex)
+        {
+            IsSuccess = ex.Message;
+        }
+
+
+    }
+
+
+
+}

@@ -1,0 +1,184 @@
+﻿<div class="top-row pl-4 navbar navbar-dark" style="box-shadow: 0 4px 7px -4px #e1e1e1; background-color: #ffffff !important; border-bottom: none;">
+
+    <a class="navbar-brand" href=""><img src="/Images/logo_ext.svg" width="170" /></a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+
+        @*@foreach (var topmenu in components.Where(x => x.MenuState == 0))
+        {
+            <li class="nav-item px-3">
+
+                <span class="oi oi-person" aria-hidden="true" style="color:white"></span> @topmenu.MenuView
+
+                <ul>
+                    @foreach (var item in components.Where(x => x.TopMenu == topmenu.ComponentId))
+                    {
+
+                        if (item.RoleMapping.Count == 0)
+                        {
+                            <AuthorizeView>
+                                <Authorized>
+                                    <li class="nav-item px-3">
+                                        <NavLink class="nav-link" href="@($"{url}/{item.ComponentId}")">
+                                            <span class="oi oi-person" aria-hidden="true"></span> @item.ComponentName
+                                        </NavLink>
+                                    </li>
+                                </Authorized>
+                            </AuthorizeView>
+                        }
+                        else
+                        {
+                            foreach (var roles in item.RoleMapping)
+                            {
+                                <AuthorizeView Roles="@roles">
+                                    <Authorized>
+                                        <li class="nav-item px-3">
+                                            <NavLink class="nav-link" href="@($"{url}/{item.ComponentId}")">
+                                                <span class="oi oi-person" aria-hidden="true"></span> @item.MenuView
+                                            </NavLink>
+
+                                        </li>
+                                    </Authorized>
+                                </AuthorizeView>
+                            }
+
+                        }
+
+                    }
+                </ul>
+
+            </li>
+        }*@
+      
+        @foreach (var item in components.Where(x=>x.MenuState == 1))
+        {
+
+            if (item.RoleMapping.Count == 0)
+            {
+                <AuthorizeView>
+                    <Authorized>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="@($"{url}/{item.ComponentId}")">
+                                <span class="oi oi-person" aria-hidden="true"></span> @item.ComponentName
+                            </NavLink>
+
+                            @* <CustomEditButtonComponent IsSmall="false" Caption="Edit" IsOutline="true" OnClick="@(()=>goUpdateUserPage(user.Id))" />*@
+                            @*  <a class="nav-link" @onclick="ComponentProcess(item.ComponentId)">Click me</a>*@
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+            }
+            else
+            {
+                foreach (var roles in item.RoleMapping)
+                {
+                    <AuthorizeView Roles="@roles">
+                        <Authorized>
+                            <li class="nav-item px-3">
+                                <NavLink class="nav-link" href="@($"{url}/{item.ComponentId}")">
+                                    <span class="oi oi-person" aria-hidden="true"></span> @item.MenuView
+                                </NavLink>
+                            </li>
+                        </Authorized>
+                    </AuthorizeView>
+                }
+
+            }
+
+        }
+
+        <AuthorizeView Roles="Admin">
+            <Authorized>
+                <li class="nav-item px-3">
+
+                    <span class="oi oi-person" aria-hidden="true"></span> Admin Panel
+
+                    <ul>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="ComponentPanel">
+                                <span class="oi oi-person" aria-hidden="true"></span>New Component
+                            </NavLink>
+                        </li>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="Componentlist">
+                                <span class="oi oi-person" aria-hidden="true"></span> Component List
+                            </NavLink>
+                        </li>
+                        @*<li class="nav-item px-3">
+                            <NavLink class="nav-link" href="UserPanel">
+                                <span class="oi oi-person" aria-hidden="true"></span> New User
+                            </NavLink>
+                        </li>*@
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="Userlist">
+                                <span class="oi oi-person" aria-hidden="true"></span> User List
+                            </NavLink>
+                        </li>
+                    </ul>
+
+                </li>
+            </Authorized>
+        </AuthorizeView>
+    </ul>
+</div>
+
+
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    [Inject]
+    HttpClient client { get; set; }
+
+    [Inject]
+    NavigationManager navigationManager { get; set; }
+
+    [Inject]
+    ILocalStorageService localStorageService { get; set; }
+
+    List<ComponentData> components = new List<ComponentData>();
+
+    public string url = "ReportView";
+
+    public Components cmp { get; set; } = new Components();
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        var httpreq = await client.GetAsync("api/Component/Components");
+        if (httpreq.IsSuccessStatusCode)
+        {
+            components = await httpreq.Content.ReadFromJsonAsync<List<ComponentData>>();
+        }
+
+    }
+
+
+    protected async override void OnAfterRender(bool asd)
+    {
+
+        var httpreq = await client.GetAsync("api/Component/Components");
+        if (httpreq.IsSuccessStatusCode)
+        {
+            components = await httpreq.Content.ReadFromJsonAsync<List<ComponentData>>();
+        }
+
+    }
+
+
+
+
+
+
+}

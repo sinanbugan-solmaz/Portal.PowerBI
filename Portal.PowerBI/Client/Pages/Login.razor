@@ -1,0 +1,85 @@
+﻿@page "/login"
+@layout Portal.PowerBI.Client.Shared.EmptyLayout
+
+
+<EditForm Model="@userLoginRequest" OnValidSubmit="LoginProcess">
+    <DataAnnotationsValidator />
+    <div class="card card-login" style="margin: 174px auto;">
+
+        <img src="/Images/logo_white.svg" />
+
+        <div class='input-fields'>
+
+            @*<input type='email' placeholder='Email' class='input-line full-width' />*@
+            <input @bind-value="userLoginRequest.UserName" class='input-line full-width' type="text" placeholder="E-Mail Address" />
+            <input @bind-value="userLoginRequest.Password" class='input-line full-width' type="password" placeholder="Password" />
+
+        </div>
+        <div>
+            <button class='ghost-round full-width' style="margin-top:50px;">Login</button>
+        </div>
+        <div>
+            <span style="display: block; font-size: 12px; text-align: center; color: #4a0505;">@errorMessage </span>
+        </div>
+
+    </div>
+</EditForm>
+
+@code {
+
+    [Inject]
+    HttpClient client { get; set; }
+
+    [Inject]
+    NavigationManager navigationManager { get; set; }
+
+    private UserLoginRequestDTO userLoginRequest = new UserLoginRequestDTO();
+
+    private string errorMessage { get; set; }
+
+    [Inject]
+    ILocalStorageService localStorageService { get; set; }
+    [Inject]
+    AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+
+    private async Task LoginProcess()
+    {
+
+        var httpreq = await client.PostAsJsonAsync("api/User/get-login", userLoginRequest);
+
+        if (httpreq.IsSuccessStatusCode)
+        {
+            try
+            {
+                var res = await httpreq.Content.ReadFromJsonAsync<ServiceResponse<UserLoginResponseDTO>>();
+
+                if (res.Success)
+                {
+                    await localStorageService.SetItemAsync("token", res.Value.ApiToken);
+                   // await localStorageService.SetItemAsync("email", res.Value.User.Email);
+                    //await localStorageService.SetItemAsync("UserId", res.Value.User.Id);
+                    await localStorageService.SetItemAsync("username", res.Value.UserName);
+                    (AuthenticationStateProvider as AuthStateProvider).NotifyUserAuthentication(res.Value.ApiToken);
+                    errorMessage = "";
+
+                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", res.Value.ApiToken);
+                    navigationManager.NavigateTo("/");
+                }
+                else
+                {
+                    //  disabled = "block";
+                    errorMessage = res.Message;
+                    navigationManager.NavigateTo("/login");
+                }
+            }
+            catch (Exception ex)
+            {
+
+                errorMessage = ex.Message;
+                navigationManager.NavigateTo("/login");
+            }
+
+        }
+    }
+
+}
